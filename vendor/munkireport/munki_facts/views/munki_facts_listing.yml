@@ -1,0 +1,23 @@
+i18n_title: munki_facts.reporttitle
+table:
+    -
+        column: machine.computer_name
+        i18n_header: listing.computername
+        formatter: clientDetail
+        tab_link: munki_facts
+    -
+        column: reportdata.serial_number
+        i18n_header: serial
+    -
+        column: reportdata.long_username
+        i18n_header: username
+    -
+        column: munki_facts.fact_key
+        i18n_header: munki_facts.key
+    -
+        column: munki_facts.fact_value
+        i18n_header: munki_facts.value
+    -
+        column: reportdata.timestamp
+        i18n_header: last_seen
+        formatter: timestampToMoment

@@ -1,0 +1,18 @@
+{
+  "detected": "Erkannt",
+  "display_serial": "Seriennummer",
+  "displays": "Bildschirme",
+  "external": "Extern",
+  "internal": "Eingebaut",
+  "machineserial": "Maschinen-Seriennummer",
+  "manufactured": "Herstellungsdatum",
+  "model": "Modell",
+  "native": "Native Auflösung",
+  "nativeresolution": "Native Auflösung",
+  "reporttitle": "Bildschirme-Bericht",
+  "timestamp": "Zuletzt verbunden",
+  "type": "Typ",
+  "vendor": "Hersteller",
+  "widget_info": "Gesamtanzahl bekannter externer Bildschirme",
+  "widget_title": "Anzahl externer Bildschirme"
+}

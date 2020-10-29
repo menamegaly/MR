@@ -1,0 +1,15 @@
+type: button
+widget_id: munkireportinfo-protocol-widget
+api_url: /module/munkireportinfo/get_protocol_stats
+i18n_title: munkireportinfo.protocol
+listing_link: /show/listing/munkireportinfo/mrinfo
+icon: fa-plug
+buttons:
+  - label: http
+    i18n_label: munkireportinfo.http
+    class: btn-danger
+    search_component: http://
+  - label: https
+    i18n_label: munkireportinfo.https
+    class: btn-success
+    search_component: https://

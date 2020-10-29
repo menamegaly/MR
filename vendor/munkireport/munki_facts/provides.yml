@@ -1,0 +1,15 @@
+client_tabs:
+    munki_facts:
+        view: client_munki_facts_tab
+        i18n: munki_facts.client_tab
+reports:
+    munki_facts:
+        view: munki_facts_report
+        i18n: munki_facts.reporttitle
+listings:
+    munki_facts:
+        view: munki_facts_listing
+        i18n: munki_facts.listing
+widgets:
+    munki_facts:
+        view: munki_facts_widget

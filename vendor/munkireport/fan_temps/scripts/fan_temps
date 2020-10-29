@@ -1,0 +1,386 @@
+#! /usr/bin/python
+# fans/temps script by tuxudo for MunkiReport
+
+import subprocess
+import plistlib
+import os
+import sys
+import string
+import re
+import json
+
+def get_smc_path():
+    
+    if os.path.isfile('/usr/local/munki/smc'):
+        return '/usr/local/munki/smc'
+    
+    if os.path.isfile('/usr/local/munkireport/smc'):
+        return '/usr/local/munkireport/smc'
+    
+def get_smc_results():
+    
+    smcinfo_json = {}
+    smcinfo = {}
+
+    # Get SMC keys
+    cmd = [get_smc_path(), '-l']
+    proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (output, unused_error) = proc.communicate()
+    
+    # Get machine model
+    model = subprocess.check_output(['/usr/sbin/sysctl', '-n','hw.model'], shell=False, bufsize=-1)
+
+    for item in output.split("\n"):
+        
+        # Some key values are offset differently
+        if " ]  " in item:
+            split_value = 7
+        else:
+            split_value = 6
+        
+        # Save entries used by listings and widgets separately
+        if "TA0P" in item:
+            smcinfo['ta0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TA0P'] = item.split(' ')[split_value].strip()
+        elif "TC0F" in item:
+            smcinfo['tc0f'] = item.split(' ')[split_value].strip()  
+            smcinfo_json['TC0F'] = item.split(' ')[split_value].strip()
+        elif "TC0D" in item:
+            smcinfo['tc0d'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TC0D'] = item.split(' ')[split_value].strip()
+        elif "TC0P" in item:
+            smcinfo['tc0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TC0P'] = item.split(' ')[split_value].strip()
+        elif "TB0T" in item:
+            smcinfo['tb0t'] = item.split(' ')[split_value].strip()   
+            smcinfo_json['TB0T'] = item.split(' ')[split_value].strip()
+        elif "TB1T" in item:
+            smcinfo['tb1t'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TB1T'] = item.split(' ')[split_value].strip()
+        elif "TB2T" in item:
+            smcinfo['tb2t'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TB2T'] = item.split(' ')[split_value].strip()
+        elif "TG0D" in item:
+            smcinfo['tg0d'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TG0D'] = item.split(' ')[split_value].strip()
+        elif "TG0H" in item:
+            smcinfo['tg0h'] = item.split(' ')[split_value].strip()   
+            smcinfo_json['TG0H'] = item.split(' ')[split_value].strip()
+        elif "TG0P" in item:
+            smcinfo['tg0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TG0P'] = item.split(' ')[split_value].strip()
+        elif "TL0P" in item:
+            smcinfo['tl0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TL0P'] = item.split(' ')[split_value].strip()
+        elif "TH0P" in item:
+            smcinfo['th0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TH0P'] = item.split(' ')[split_value].strip()
+        elif "Th0H" in item:
+            smcinfo['th0h'] = item.split(' ')[split_value].strip()
+            smcinfo_json['Th0H'] = item.split(' ')[split_value].strip()
+        elif "Th1H" in item:
+            smcinfo['th1h'] = item.split(' ')[split_value].strip()
+            smcinfo_json['Th1H'] = item.split(' ')[split_value].strip()
+        elif "Th2H" in item:
+            smcinfo['th2h'] = item.split(' ')[split_value].strip() 
+            smcinfo_json['Th2H'] = item.split(' ')[split_value].strip()
+        elif "TM0S" in item:
+            smcinfo['tm0s'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TM0S'] = item.split(' ')[split_value].strip()
+        elif "Tm0P" in item:
+            smcinfo['tm0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['Tm0P'] = item.split(' ')[split_value].strip()
+        elif "Ts0P" in item:
+            smcinfo['ts0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['Ts0P'] = item.split(' ')[split_value].strip()
+        elif "TN0H" in item:
+            smcinfo['tn0h'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TN0H'] = item.split(' ')[split_value].strip()
+        elif "TN0D" in item:
+            smcinfo['tn0d'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TN0D'] = item.split(' ')[split_value].strip()
+        elif "TN0P" in item:
+            smcinfo['tn0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['TN0P'] = item.split(' ')[split_value].strip()
+        elif "Tp0P" in item:
+            smcinfo['tp0p'] = item.split(' ')[split_value].strip()
+            smcinfo_json['Tp0P'] = item.split(' ')[split_value].strip()
+        elif "F0Ac" in item:
+            smcinfo['f0ac'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F0Ac'] = item.split(' ')[split_value].strip()
+        elif "F0Mn" in item:
+            smcinfo['f0mn'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F0Mn'] = item.split(' ')[split_value].strip()
+        elif "F0Mx" in item:
+            smcinfo['f0mx'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F0Mx'] = item.split(' ')[split_value].strip()
+        elif "F1Ac" in item:
+            smcinfo['f1ac'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F1Ac'] = item.split(' ')[split_value].strip()
+        elif "F1Mn" in item:
+            smcinfo['f1mn'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F1Mn'] = item.split(' ')[split_value].strip()
+        elif "F1Mx" in item:
+            smcinfo['f1mx'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F1Mx'] = item.split(' ')[split_value].strip()
+        elif "F2Ac" in item:
+            smcinfo['f2ac'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F2Ac'] = item.split(' ')[split_value].strip()
+        elif "F2Mn" in item:
+            smcinfo['f2mn'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F2Mn'] = item.split(' ')[split_value].strip()
+        elif "F2Mx" in item:
+            smcinfo['f2mx'] = item.split(' ')[split_value].strip()
+            smcinfo_json['F2Mx'] = item.split(' ')[split_value].strip()
+        elif "MSDI" in item and "(bytes 01)" in item: # DiscIn
+            smcinfo['msdi'] = "1"
+            smcinfo_json['MSDI'] = "1"
+        elif "MSDI" in item and "(bytes 00)" in item: # DiscIn
+            smcinfo['msdi'] = "0"
+            smcinfo_json['MSDI'] = "0"
+            
+        elif "BBAD" in item and "(bytes 01)" in item:
+            smcinfo_json['BBAD'] = "1"
+        elif "BBAD" in item and "(bytes 00)" in item:
+            smcinfo_json['BBAD'] = "0"
+            
+        elif "BBIN" in item and "(bytes 01)" in item:
+            smcinfo_json['BBIN'] = "1"
+        elif "BBIN" in item and "(bytes 00)" in item:
+            smcinfo_json['BBIN'] = "0"
+
+        elif "B0AC" in item:
+            smcinfo_json['B0AC'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "B0FC" in item:
+            smcinfo_json['B0FC'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "B0RM" in item:
+            smcinfo_json['B0RM'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "BC1V" in item:
+            smcinfo_json['BC1V'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "BC2V" in item:
+            smcinfo_json['BC2V'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "BC3V" in item:
+            smcinfo_json['BC3V'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "CHBI" in item:
+            smcinfo_json['CHBI'] = str(float(item.split(' ')[split_value].strip())/1000)
+        elif "CHBV" in item:
+            smcinfo_json['CHBV'] = str(float(item.split(' ')[split_value].strip())/1000)
+            
+            
+            
+            
+        elif "B0TF" in item and "65535" not in item:
+            smcinfo_json['B0TF'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('B0TF', ''))).strip()
+        elif "BRSC" in item:
+            smcinfo_json['BRSC'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('BRSC', ''))).strip()
+        elif "CHBI" in item:
+            smcinfo_json['CHBI'] = str(float(item.split(' ')[split_value].strip())/1000)
+    
+    
+        elif "ALSL" in item:
+            if 'iMac' in model:
+                if (int(re.sub('[^0-9]','', model)) > 120):
+                    smcinfo['ALSL'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('ALSL', ''))).strip()
+                    smcinfo_json['alsl'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('ALSL', ''))).strip()
+            elif "(bytes 01 2c)" in item:
+                smcinfo['alsl'] = "0"
+                smcinfo_json['ALSL'] = "0"
+            else: 
+                smcinfo['alsl'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('ALSL', ''))).strip()
+                smcinfo_json['ALSL'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('ALSL', ''))).strip()
+        elif "AUPO" in item:
+            smcinfo_json['AUPO'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('AUPO', ''))).strip()
+        elif "BNum" in item:
+            if 'Book' in model:
+                smcinfo_json['BNum'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('BNum', ''))).strip()
+        elif "FNum" in item:
+            smcinfo['fnum'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('FNum', ''))).strip() #Number of supported fans.
+            smcinfo_json['FNum'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('FNum', ''))).strip() #Number of supported fans.
+        elif "FS!" in item:
+            smcinfo['fnfd'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('FS!', ''))).strip()
+            smcinfo_json['FNFD'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('FS!', ''))).strip() #Fan force bits. FS![15:0] Setting bit to 1 allows for external control over fan speed target and prevents thermal manager from actively overidding value set via key access.
+        elif "LSOF" in item and "(bytes 00)" in item:
+            smcinfo['lsof'] = "0" #Reads TRUE (1) if the SIL is Off
+            smcinfo_json['LSOF'] = "0" #Reads TRUE (1) if the SIL is Off
+        elif "LSOF" in item and "(bytes 01)" in item:
+            smcinfo['lsof'] = "1" #Reads TRUE (1) if the SIL is Off
+            smcinfo_json['LSOF'] = "1" #Reads TRUE (1) if the SIL is Off
+        elif "LSPV" in item:
+            smcinfo_json['LSPV'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('LSPV', ''))).strip() #SIL's Current PWM value
+        elif "MSAc" in item:
+            smcinfo_json['MSAc'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSAc', ''))).strip() #Returns the average CPU PLIMIT sent by the SMC
+        elif "MSAg" in item:
+            smcinfo_json['MSAg'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSAg', ''))).strip() #Returns the average GPU PLIMIT sent by the SMC
+        elif "MSAm" in item:
+            smcinfo_json['MSAm'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSAm', ''))).strip() #Returns the average MEM PLIMIT sent by the SMC
+        elif "MSLD" in item:
+            if 'Book' in model:
+                smcinfo['msld'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSLD', ''))).strip() #Returns the current Lid Switch state
+                smcinfo_json['MSLD'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSLD', ''))).strip() #Returns the current Lid Switch state
+        elif "MSHA" in item:
+            smcinfo_json['MSHA'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSHA', ''))).strip() #Average HDD activity (range 0 to 1) in U7.9 format.
+        elif "SPHT" in item:
+            smcinfo['spht'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('SPHT', ''))).strip() #Current state of all Prochots and whether the SMC itself is asserting each one.
+            smcinfo_json['SPHT'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('SPHT', ''))).strip() #Current state of all Prochots and whether the SMC itself is asserting each one.
+        elif "MSSD" in item:
+            smcinfo['mssd'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSSD', ''))).strip() #Shutdown cause
+            smcinfo_json['MSSD'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSSD', ''))).strip() #Shutdown cause
+        elif "MSSF" in item:
+            smcinfo['mssf'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSSF', ''))).strip() #Bad fan flag bits.
+            smcinfo_json['MSSF'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSSF', ''))).strip() #Bad fan flag bits.
+        elif "MSSP" in item:
+            smcinfo_json['MSSP'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSSP', ''))).strip() #Stores the last known Sleep Request cause
+        elif "MSTM" in item:
+            smcinfo['mstm'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSTM', ''))).strip() #Returns whether power balancing is enabled or not.
+            smcinfo_json['MSTM'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSTM', ''))).strip() #Returns whether power balancing is enabled or not.
+        elif "MSTc" in item:
+            smcinfo_json['MSTc'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSTc', ''))).strip()
+        elif "MSTg" in item and "(bytes 00)" not in item:
+            smcinfo_json['MSTg'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSTg', ''))).strip()
+        elif "MSTm" in item and "(bytes 00)" not in item:
+            smcinfo_json['MSTm'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('MSTg', ''))).strip()
+        elif "NATJ" in item:
+            smcinfo_json['NATJ'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('NATJ', ''))).strip() #Ninja Action Timer Job.  This job is performed when the Ninja Action Timer
+        elif "NATi" in item:
+            smcinfo_json['NATi'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('NATi', ''))).strip() #Ninja Action Timer.  This timer can be set to the number of seconds before a job (defined in NATJ) is performed.  Value is in seconds and counts down to zero.  Setting to zero cancels any previously set timer.
+        elif "HDBS" in item:
+            smcinfo_json['HDBS'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('HDBS', ''))).strip()
+        elif "SGHT" in item:
+            smcinfo['sght'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('SGHT', ''))).strip()
+            smcinfo_json['SGHT'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('SGHT', ''))).strip() # GPU overtemp
+        elif "SGTT" in item:
+            smcinfo_json['SGTT'] = item.split(' ')[split_value].strip() #GPU Heatsink Throttle Threshold Temperature.
+        elif "SGTg" in item:
+            smcinfo_json['SGTg'] = item.split(' ')[split_value].strip() #GPU Thermal Target Temp
+        elif "SHTg" in item:
+            smcinfo_json['SHTg'] = item.split(' ')[split_value].strip() #HDD Thermal Target Temp
+        elif "SCTg" in item:
+            smcinfo_json['SCTg'] = item.split(' ')[split_value].strip() #CPU Thermal Target Temp
+        elif "SLPT" in item:
+            smcinfo_json['SLPT'] = item.split(' ')[split_value].strip() #LCD Prochot threshold. TL0P temp at which Prochot will be asserted.
+        elif "SLST" in item:
+            smcinfo_json['SLST'] = item.split(' ')[split_value].strip() #LCD Sleep threshold. TL0P temp at which Sleep will be requested.
+        elif "SLTg" in item:
+            smcinfo_json['SLTg'] = item.split(' ')[split_value].strip() #LCD Fan Temp Target
+        elif "SLTp" in item:
+            smcinfo_json['SLTp'] = item.split(' ')[split_value].strip() #LCD Power Temp Target
+        elif "SOTg" in item:
+            smcinfo_json['SOTg'] = item.split(' ')[split_value].strip() #ODD Thermal Target Temp
+        elif "SPH0" in item:
+            smcinfo['sph0'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('SPH0', ''))).strip() #CPU Prochot event count since last boot
+            smcinfo_json['SPH0'] = re.sub(r'\(.+?\)', '', re.sub(r'\[.+?\]', '', item.replace('SPH0', ''))).strip() #CPU Prochot event count since last boot
+        elif "SpPT" in item:
+            smcinfo_json['SpPT'] = item.split(' ')[split_value].strip() #PS Prochot threshold.
+        elif "SpST" in item:
+            smcinfo_json['SpST'] = item.split(' ')[split_value].strip() #PS Sleep threshold.
+        elif "SpTg" in item:
+            smcinfo_json['SpTg'] = item.split(' ')[split_value].strip() #PS Fan Temp Target
+            
+        # Process temperature, fans, current, volts, and watts entries
+        elif item.startswith( '  T', 0, 3 ): # Temperatures
+            smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+        elif item.startswith( '  F', 0, 3 ): # Fans
+            smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+        elif item.startswith( '  P', 0, 3 ) or item.startswith( '  V', 0, 3 ) or item.startswith( '  I', 0, 3 ): # Watts, Volts, Amps
+            # Calculate proper value
+            if item.split(' ')[split_value].strip() is not "" and "bytes" not in item.split(' ')[split_value].strip() and float(item.split(' ')[split_value].strip()) > 1000:
+                smcinfo_json[item.split(' ')[2].strip()] = str(float(item.split(' ')[split_value].strip())/1000)
+            elif item.split(' ')[split_value].strip() != "254.000":
+                smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+            else:
+                pass
+        elif item.startswith( '  dB', 0, 4 ): # Fan decibels
+            smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+        elif item.startswith( '  MO_', 0, 5 ): # Motion sensor axis
+            smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+        elif item.startswith( '  B', 0, 4 ): # Battery sensors
+            smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+        elif item.startswith( '  AC-', 0, 5 ): # AC adapter
+            smcinfo_json[item.split(' ')[2].strip()] = item.split(' ')[split_value].strip()
+        elif item.startswith( '  D', 0, 4 ): # AC port information
+            item_d = re.sub("[^0-9]", "", item.split(' ')[split_value]).strip()
+            if item_d:
+                smcinfo_json[item.split(' ')[2].strip()] = (int(item_d)/1000)
+                
+    # Xserve check
+    if 'Xserve' in model:
+        pass
+    else:
+        # Get fan labels, if no an Xserve
+        cmd = [get_smc_path(), '-f']
+        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (output, unused_error) = proc.communicate()
+
+        output = output.replace(':\n', ':')
+        
+        # Process each line looking for the fan name
+        for item in output.split("\n"):
+            if "Fan #0" in item and "Fan ID" in item:
+                smcinfo_json['F0ID'] = item.split(':')[2].strip()
+                smcinfo['f0id'] = item.split(':')[2].strip()
+            elif "Fan #1" in item and "Fan ID" in item:
+                smcinfo_json['F1ID'] = item.split(':')[2].strip()
+                smcinfo['f1id'] = item.split(':')[2].strip()
+            elif "Fan #2" in item and "Fan ID" in item:
+                smcinfo_json['F2ID'] = item.split(':')[2].strip()
+                smcinfo['f2id'] = item.split(':')[2].strip()
+            elif "Fan #3" in item and "Fan ID" in item:
+                smcinfo_json['F3ID'] = item.split(':')[2].strip()
+                smcinfo['f3id'] = item.split(':')[2].strip()
+            elif "Fan #4" in item and "Fan ID" in item:
+                smcinfo_json['F4ID'] = item.split(':')[2].strip()            
+                smcinfo['f4id'] = item.split(':')[2].strip()            
+            elif "Fan #5" in item and "Fan ID" in item:
+                smcinfo_json['F5ID'] = item.split(':')[2].strip()            
+                smcinfo['f5id'] = item.split(':')[2].strip()            
+            elif "Fan #6" in item and "Fan ID" in item:
+                smcinfo_json['F6ID'] = item.split(':')[2].strip()          
+                smcinfo['f6id'] = item.split(':')[2].strip()          
+            elif "Fan #7" in item and "Fan ID" in item:
+                smcinfo_json['F7ID'] = item.split(':')[2].strip()           
+                smcinfo['f7id'] = item.split(':')[2].strip()           
+            elif "Fan #8" in item and "Fan ID" in item:
+                smcinfo_json['F8ID'] = item.split(':')[2].strip()
+                smcinfo['f8id'] = item.split(':')[2].strip()
+
+    # Add in JSON string of SMC keys
+    smcinfo['json_info'] = json.dumps(smcinfo_json)
+
+    return smcinfo
+    
+def main():
+    
+    """Main"""
+    # Remove old fan_temps.sh script, if it exists
+    if os.path.isfile(os.path.dirname(os.path.realpath(__file__))+'/fan_temps.sh'):
+        os.remove(os.path.dirname(os.path.realpath(__file__))+'/fan_temps.sh')
+
+    # Create cache dir if it does not exist
+    cachedir = '%s/cache' % os.path.dirname(os.path.realpath(__file__))
+    if not os.path.exists(cachedir):
+        os.makedirs(cachedir)
+
+    # Skip manual check
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'manualcheck':
+            print 'Manual check: skipping'
+            exit(0)
+
+    # Set the encoding
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
+    # Get results
+    info = get_smc_results()
+
+    # Write smc results to cache file
+    output_plist = os.path.join(cachedir, 'fan_temps.plist')
+    plistlib.writePlist(info, output_plist)
+    #print plistlib.writePlistToString(info)
+
+if __name__ == "__main__":
+    main()

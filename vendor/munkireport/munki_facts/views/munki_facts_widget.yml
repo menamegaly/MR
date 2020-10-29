@@ -1,0 +1,9 @@
+type: scrollbox
+widget_id: munki-facts-group-widget
+api_url: /module/munki_facts/get_list
+i18n_title: munki_facts.reporttitle
+icon: fa-check-square
+listing_link: /show/listing/munki_facts/munki_facts
+search_key: label
+badge: count
+i18n_empty_result: no_data

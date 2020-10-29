@@ -1,0 +1,14 @@
+{
+    "clienttab": "Sessions utilisateurs",
+    "event": "Événement",
+    "time": "Temps",
+    "reporttitle": "Sessions utilisateurs",
+    "reboot": "Redémarrer",
+    "shutdown": "Eteindre",
+    "sshlogin": "Connexion SSH",
+    "ipaddress": "Remote SSH IP Address",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "last_user_uid": "Last User UID",
+    "uid": "UID"
+}

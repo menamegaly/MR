@@ -1,0 +1,17 @@
+{
+  "detected": "Détecté",
+  "display_serial": "Numéro de série",
+  "displays": "Moniteurs",
+  "external": "Externe",
+  "internal": "Built-In",
+  "machineserial": "N° de série",
+  "manufactured": "Date de fabrication",
+  "model": "Modèle",
+  "native": "Résolution native",
+  "nativeresolution": "Résolution native",
+  "timestamp": "Dernière connexion",
+  "type": "Type",
+  "vendor": "Vendeur",
+  "widget_info": "Nombre total d'écrans externes connus",
+  "widget_title": "Nombre d'écrans"
+}

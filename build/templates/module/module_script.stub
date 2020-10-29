@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Script to collect data
+# and put the data into outputfile
+
+CWD=$(dirname $0)
+CACHEDIR="$CWD/cache/"
+OUTPUT_FILE="${CACHEDIR}MODULE.txt"
+SEPARATOR=' = '
+
+# Business logic goes here
+LOGIC
+# Output data here
+DATAOUTPUT

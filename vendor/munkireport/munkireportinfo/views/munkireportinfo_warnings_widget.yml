@@ -1,0 +1,8 @@
+type: scrollbox
+widget_id: munkireportinfo-warnings-widget
+api_url: /module/munkireportinfo/get_warnings/10
+i18n_title: munkireportinfo.munkireport_warnings
+icon: fa-warning
+listing_link: /show/listing/munkireportinfo/mrinfo
+search_key: log_warning
+i18nEmptyResult: no_warnings

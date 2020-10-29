@@ -1,0 +1,153 @@
+#! /usr/bin/python
+# Time Machine menu code by frogor, wrapped by tuxudo for MunkiReport
+
+import subprocess
+import os
+import sys
+import platform
+sys.path.insert(0, '/usr/local/munki')
+sys.path.insert(0, '/usr/local/munkireport')
+
+from munkilib import FoundationPlist
+from Foundation import CFPreferencesCopyAppValue
+
+def get_time_machine():
+    
+    # Create empty out dict
+    out = {}
+        
+    # Add in preference values
+    out["AlwaysShowDeletedBackupsWarning"] = get_pref_value('AlwaysShowDeletedBackupsWarning', 'com.apple.TimeMachine')
+    out["AutoBackup"] = get_pref_value('AutoBackup', 'com.apple.TimeMachine')
+    out["DiskLowWarningTime"] = str(get_pref_value('DiskLowWarningTime', 'com.apple.TimeMachine'))
+    out["ExcludeByPath"] = get_pref_value('ExcludeByPath', 'com.apple.TimeMachine')
+    out["HostUUIDs"] = get_pref_value('HostUUIDs', 'com.apple.TimeMachine')
+    out["LastCompactTime"] = str(get_pref_value('LastCompactTime', 'com.apple.TimeMachine'))
+    out["LastConfigurationTraceDate"] = get_pref_value('LastConfigurationTraceDate', 'com.apple.TimeMachine')
+    out["LastDestinationID"] = get_pref_value('LastDestinationID', 'com.apple.TimeMachine')
+    out["LocalizedDiskImageVolumeName"] = get_pref_value('LocalizedDiskImageVolumeName', 'com.apple.TimeMachine')
+    out["MobileBackups"] = get_pref_value('MobileBackups', 'com.apple.TimeMachine')
+    out["SkipSystemFiles"] = get_pref_value('SkipSystemFiles', 'com.apple.TimeMachine')
+    out["SkipPaths"] = get_pref_value('SkipPaths', 'com.apple.TimeMachine')
+    out["Destinations"] = get_pref_value('Destinations', 'com.apple.TimeMachine')
+    try:
+        out["bytes_available"] = str(out["Destinations"][0]["BytesAvailable"])
+        out["bytes_used"] = str(out["Destinations"][0]["BytesUsed"])
+    except:
+        pass    
+    
+    # If less than 10.12, run legacy log collector
+    if getOsVersion() < 12:
+        # Get legacy informtion, only supported on 10.6-10.11
+        from subprocess import Popen, PIPE
+        stdout = Popen("/usr/bin/syslog -F '$((Time)(utc)) $Message' -k Sender com.apple.backupd -k Time ge -7d -k Message R '^(Backup|Starting).*'", shell=True, stdout=PIPE).stdout
+        output = stdout.read()
+        out['legacy_output'] = output
+    else:
+        out['legacy_output'] = "Mac OS X 10.12+ not supported with legacy Time Machine log output"
+        
+    # Check if 10.13 or higher and get data about APFS local snapshots
+    if getOsVersion() > 12:
+        cmd = ['/usr/bin/tmutil', 'listlocalsnapshotdates', '/']
+        proc = subprocess.Popen(cmd, shell=False, bufsize=-1,
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (output, unused_error) = proc.communicate()
+        out['apfs_snapshots'] = output
+    else:
+        out['apfs_snapshots'] = ""
+  
+    # Check if 10.9 or higher and extract extra data from Time Machine menu item. Extraction does not work on <10.8
+    if getOsVersion() > 8:
+
+        # Get extra data from menu item. Thanks frogor!
+        from Foundation import NSBundle
+        TMMenu = NSBundle.bundleWithPath_('/System/Library/CoreServices/Menu Extras/TimeMachine.menu')
+        AppleTMSettings = TMMenu.classNamed_('AppleTMSettings')
+
+        settings = AppleTMSettings.sharedSettings()
+
+        current_dest = settings.currentDestination()
+
+        # Check to make sure Time Machine is enabled
+        if str(current_dest) != "None":
+
+            # Commented out values never return anything but static data
+
+            out['alias_volume_name'] = current_dest.aliasVolumeName()
+            out['is_network_destination'] = str(current_dest.isNetworkDestination())
+            out['network_url'] = str(current_dest.networkURL())
+            out['mount_point'] = str(current_dest.mountPoint())
+            #out['is_configured_destination'] = str(current_dest.isConfiguredDestination())
+            #out['backup_state'] = str(current_dest.backupState())
+            #out['percent_backed_up'] = str(current_dest.percentBackedUp())
+            out['volume_display_name'] = str(current_dest.volumeDisplayName())
+            out['server_display_name'] = str(current_dest.serverDisplayName())
+            out['time_capsule_display_name'] = str(current_dest.timeCapsuleDisplayName())
+            #out['update_pending'] = str(current_dest.updatePending())
+            #out['latest_backup_result_severity'] = str(current_dest.latestBackupResultSeverity())
+            #out['order'] = str(current_dest.order())
+            #out['estimated_seconds_remaining'] = str(current_dest.estimatedSecondsRemaining())
+            out['latestSnapshotDate'] = str(current_dest.latestSnapshotDate())
+            #out['percent_converted'] = str(current_dest.percentConverted())
+            #out['is_converting'] = str(current_dest.isConverting())
+            out['earliest_snapshot_date'] = str(current_dest.earliestSnapshotDate())
+            out['snapshot_count'] = str(current_dest.snapshotCount())
+
+            return out
+
+        else:
+
+            return out
+        
+    else:
+        return out
+    
+def get_pref_value(key, domain):
+    
+    value = CFPreferencesCopyAppValue(key, domain)
+    
+    if(value is not None):
+        return value
+    elif(value is not None and len(value) == 0 ):
+        return ""
+    else:
+        return ""
+  
+def getOsVersion():
+    """Returns the minor OS version."""
+    os_version_tuple = platform.mac_ver()[0].split('.')
+    return int(os_version_tuple[1])
+
+def main():
+    
+    """Main"""
+    # Remove old timemachine.sh script, if it exists
+    if os.path.isfile(os.path.dirname(os.path.realpath(__file__))+'/timemachine.sh'):
+        os.remove(os.path.dirname(os.path.realpath(__file__))+'/timemachine.sh')
+        
+    # Create cache dir if it does not exist
+    cachedir = '%s/cache' % os.path.dirname(os.path.realpath(__file__))
+    if not os.path.exists(cachedir):
+        os.makedirs(cachedir)
+
+    # Skip manual check
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'manualcheck':
+            print 'Manual check: skipping'
+            exit(0)
+
+    # Set the encoding
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
+    # Get results
+    info = get_time_machine()
+    
+    # Write Time Machine results to cache file
+    output_plist = os.path.join(cachedir, 'timemachine.plist')
+    FoundationPlist.writePlist(info, output_plist)
+#    print FoundationPlist.writePlistToString(info)
+
+if __name__ == "__main__":
+    main()

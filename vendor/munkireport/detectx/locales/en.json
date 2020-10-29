@@ -1,0 +1,26 @@
+{
+  "listing": {
+    "numberofissues": "Number of Issues",
+    "searchdate": "Search Date",
+    "status": "Status",
+    "issues":"Issues",
+    "noissues": "No Issues Found!",
+    "clean":"Clean",
+    "true":"True",
+    "false":"False",
+    "scantime": "Scan Duration",
+    "spotlightindexing": "Spotlight Indexing",
+    "infections": "Infections",
+    "registered": "Registered",
+    "infectionstatus": "Infected",
+    "issuestatus": "Issues"
+  },
+  "widget": {
+    "title": "DetectX Status",
+    "clean": "Clean",
+    "issues": "Issue",
+    "issues_plural": "Issues",
+    "infected": "Infected"
+  },
+  "title": "DetectX"
+}
